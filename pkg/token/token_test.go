@@ -8,17 +8,14 @@ import (
 
 const secret = "i1ydX9RtHyuJTrw7frcu"
 
-func TestJwtSign(t *testing.T) {
+func TestJwtSignAndParse(t *testing.T) {
 	tokenString, err := New(secret).JwtSign(123456789, "test_user", 24*time.Hour)
 	if err != nil {
 		t.Error("sign error", err)
 		return
 	}
 	t.Log(tokenString)
-}
 
-func TestJwtParse(t *testing.T) {
-	tokenString := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOjEyMzQ1Njc4OSwiVXNlck5hbWUiOiJ0ZXN0X3VzZXIiLCJleHAiOjE2NDAyMjY4OTYsImlhdCI6MTY0MDE0MDQ5NiwibmJmIjoxNjQwMTQwNDk2fQ.RgmaR9ybLgRg1JwDigo6NXiTt8-x3H_3r7Zfoeq6A-0"
 	user, err := New(secret).JwtParse(tokenString)
 	if err != nil {
 		t.Error("parse error", err)

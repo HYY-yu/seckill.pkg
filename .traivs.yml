@@ -1,0 +1,15 @@
+language: go
+dist: xenial
+
+cache:
+  directories:
+    - $TRAVIS_HOME/.cache
+
+go:
+  - 1.16
+
+install:
+  - go get -d -t ./...
+
+script:
+  - go test -v  ./...
