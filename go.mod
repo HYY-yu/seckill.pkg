@@ -1,4 +1,4 @@
-module seckill.pkg
+module github.com/HYY-yu/seckill.pkg
 
 go 1.16
 
