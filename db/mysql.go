@@ -62,9 +62,9 @@ func (d *dbRepo) DbClose() error {
 
 func dbConnect(cfg *DBConfig) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=%t&loc=%s",
+		cfg.User,
 		cfg.Pass,
 		cfg.Addr,
-		cfg.User,
 		cfg.Name,
 		true,
 		"Local")
