@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	// Create some standard server metrics.
+	// GRPCMetrics Create some standard server metrics.
 	GRPCMetrics *grpc_prometheus.ServerMetrics
 )
 
