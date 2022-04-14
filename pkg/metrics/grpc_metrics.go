@@ -11,7 +11,7 @@ var (
 	GRPCMetrics *grpc_prometheus.ServerMetrics
 )
 
-func InitGrpcMetrics(grpcServer *grpc.Server) {
+func InitGrpcMetrics() {
 	// Register standard server metrics and customized metrics to registry.
 	GRPCMetrics = grpc_prometheus.NewServerMetrics()
 	prometheus.MustRegister(GRPCMetrics)
