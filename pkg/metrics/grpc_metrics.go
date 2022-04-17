@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"strings"
+
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
@@ -17,6 +19,9 @@ func InitGrpcMetrics() error {
 	// 不能使用 MustRegister ,因为库本身注册过了
 	err := prometheus.Register(GRPCMetrics)
 	if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
+		if strings.Contains(err.Error(), " already exists with the same fully-qualified name and const label values") {
+			return nil
+		}
 		return err
 	}
 	return nil
