@@ -11,11 +11,15 @@ var (
 	GRPCMetrics *grpc_prometheus.ServerMetrics
 )
 
-func InitGrpcMetrics() {
+func InitGrpcMetrics() error {
 	// Register standard server metrics and customized metrics to registry.
 	GRPCMetrics = grpc_prometheus.NewServerMetrics()
-	prometheus.MustRegister(GRPCMetrics)
-
+	// 不能使用 MustRegister ,因为库本身注册过了
+	err := prometheus.Register(GRPCMetrics)
+	if _, ok := err.(prometheus.AlreadyRegisteredError); !ok {
+		return err
+	}
+	return nil
 }
 
 // SetToGrpcServer 注意，设置前，需要先注册拦截器
