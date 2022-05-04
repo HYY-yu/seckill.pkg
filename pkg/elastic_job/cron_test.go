@@ -200,7 +200,7 @@ func TestRedisJob(t *testing.T) {
 
 		testHander := func(j *job.Job) (err error) {
 			t.Log("hello, world! ")
-			time.Sleep(time.Second)
+			// time.Sleep(time.Second)
 			// 5秒后
 			delayTime := time.Unix(j.DelayTime, 0)
 

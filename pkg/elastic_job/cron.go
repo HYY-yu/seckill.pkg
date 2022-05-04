@@ -145,7 +145,6 @@ func (e *elasticJob) run() {
 					return
 				}
 
-				fmt.Println("got lock")
 				err = hander.(job.Handler)(respJob)
 				if err != nil {
 					e.logger.Error("handler report error",
@@ -155,13 +154,16 @@ func (e *elasticJob) run() {
 					)
 				}
 
+				time.Sleep(time.Second * 3)
+				// 锁不能马上释放，如果handler执行的太快，锁就马上被释放了。
+				// 导致别的节点也能获取到锁，只有充分的锁住足够的时间，让过期事件被全量推送
+				// 其它节点已经退出，才可以释放锁。
 				err = e.store.UnLock(jobHash)
 				if err != nil {
 					e.logger.Error("handler unlock error ",
 						zap.Error(err),
 					)
 				}
-				fmt.Println("release lock")
 			}()
 
 			if respJob.Cycle {
