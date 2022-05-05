@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -75,4 +76,54 @@ func TestIsZeroForSlice(t *testing.T) {
 	var s2 = make([]int, 0)
 	st2 := IsZero(s2)
 	assert.Equal(t, false, st2)
+}
+
+func TestStrArr2IntArr(t *testing.T) {
+	type args struct {
+		s          []string
+		ignoreZero bool
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []int
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "test1",
+			args: args{
+				s:          []string{"1", "2", "3", ""},
+				ignoreZero: true,
+			},
+			want:    []int{1, 2, 3},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "test2",
+			args: args{
+				s:          []string{"1", "b", "3", ""},
+				ignoreZero: false,
+			},
+			want:    nil,
+			wantErr: assert.Error,
+		},
+		{
+			name: "test3",
+			args: args{
+				s:          []string{"1", "", "3", "2"},
+				ignoreZero: false,
+			},
+			want:    []int{1, 0, 3, 2},
+			wantErr: assert.NoError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := StrArr2IntArr(tt.args.s, tt.args.ignoreZero)
+			if !tt.wantErr(t, err, fmt.Sprintf("StrArr2IntArr(%v, %v)", tt.args.s, tt.args.ignoreZero)) {
+				return
+			}
+			assert.Equalf(t, tt.want, got, "StrArr2IntArr(%v, %v)", tt.args.s, tt.args.ignoreZero)
+		})
+	}
 }
