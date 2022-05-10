@@ -1,4 +1,4 @@
-package svc
+package login
 
 import (
 	"context"
@@ -43,7 +43,7 @@ func TestRefreshToken(t *testing.T) {
 		assert.Equal(t, claims.UserID, int64(userId))
 		assert.Equal(t, claims.UserName, userName)
 
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 3)
 
 		_, err = token.New(cfg.Secret).JwtParse(refreshResp.AccessToken)
 		assert.Equal(t, token.ErrorTokenExpiredOrNotActive, err)
@@ -54,12 +54,10 @@ func TestRefreshToken(t *testing.T) {
 		assert.NoError(t, err)
 
 		refreshResp := resp.Token.(*model.LoginResponseByRefreshToken)
+		time.Sleep(time.Second * 3)
 
 		newResp, err := system.RefreshToken(ctx, refreshResp.RefreshToken)
 		assert.NoError(t, err)
-
-		time.Sleep(time.Second * 2)
-
 		newRefreshResp := newResp.Token.(*model.LoginResponseByRefreshToken)
 
 		// 依然有效
@@ -67,10 +65,6 @@ func TestRefreshToken(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, claims.UserID, int64(userId))
 		assert.Equal(t, claims.UserName, userName)
-
-		// 老的RefreshToken已经无法使用
-		_, err = system.RefreshToken(ctx, refreshResp.RefreshToken)
-		assert.Equal(t, model.RefreshTokenExpired, err)
 	})
 
 	t.Run("Test token cancel", func(t *testing.T) {
@@ -152,7 +146,7 @@ func TestBlackList(t *testing.T) {
 		refreshResp := resp.Token.(*model.LoginResponseByBlackList)
 
 		// 不在黑名单
-		result, err := system.(*blackListSystem).CheckBlackList(ctx, refreshResp.AccessToken)
+		result, err := system.(*BlackListSystem).CheckBlackList(ctx, refreshResp.AccessToken)
 		assert.NoError(t, err)
 		assert.Equal(t, false, result)
 
@@ -160,7 +154,7 @@ func TestBlackList(t *testing.T) {
 		err = system.TokenCancel(ctx, refreshResp.AccessToken)
 		assert.NoError(t, err)
 
-		result, err = system.(*blackListSystem).CheckBlackList(ctx, refreshResp.AccessToken)
+		result, err = system.(*BlackListSystem).CheckBlackList(ctx, refreshResp.AccessToken)
 		assert.NoError(t, err)
 		assert.Equal(t, true, result)
 	})

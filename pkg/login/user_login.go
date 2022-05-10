@@ -1,4 +1,4 @@
-package svc
+package login
 
 import (
 	"context"
@@ -37,7 +37,7 @@ type LoginTokenSystem interface {
 }
 
 func NewByRefreshToken(cfg *RefreshTokenConfig, cache cache_v2.Repo) LoginTokenSystem {
-	return &refreshTokenSystem{cfg: cfg, cache: cache}
+	return &RefreshTokenSystem{cfg: cfg, cache: cache}
 }
 
 type RefreshTokenConfig struct {
@@ -46,13 +46,13 @@ type RefreshTokenConfig struct {
 	RefreshDuration time.Duration `json:"refresh_duration"`
 }
 
-type refreshTokenSystem struct {
+type RefreshTokenSystem struct {
 	cfg *RefreshTokenConfig
 
 	cache cache_v2.Repo
 }
 
-func (r *refreshTokenSystem) GenerateToken(ctx context.Context, userId int, userName string) (*model.LoginResponse, error) {
+func (r *RefreshTokenSystem) GenerateToken(ctx context.Context, userId int, userName string) (*model.LoginResponse, error) {
 	accessToken, err := token.New(r.cfg.Secret).JwtSign(int64(userId), userName, r.cfg.ExpireDuration)
 	if err != nil {
 		return nil, err
@@ -83,17 +83,17 @@ func (r *refreshTokenSystem) GenerateToken(ctx context.Context, userId int, user
 	}, nil
 }
 
-func (r *refreshTokenSystem) TokenCancelById(ctx context.Context, userId int, userName string) error {
+func (r *RefreshTokenSystem) TokenCancelById(ctx context.Context, userId int, userName string) error {
 	refreshToken := r.generateRefreshToken(r.cfg.Secret, userId, userName)
 	return r.TokenCancel(ctx, refreshToken)
 }
 
-func (r *refreshTokenSystem) TokenCancel(ctx context.Context, refreshToken string) error {
+func (r *RefreshTokenSystem) TokenCancel(ctx context.Context, refreshToken string) error {
 	_ = r.cache.Del(ctx, model.RedisRefreshTokenKeyPrefix+refreshToken)
 	return nil
 }
 
-func (r *refreshTokenSystem) RefreshToken(ctx context.Context, refreshToken string) (*model.LoginResponse, error) {
+func (r *RefreshTokenSystem) RefreshToken(ctx context.Context, refreshToken string) (*model.LoginResponse, error) {
 	userJson, err := r.cache.Get(ctx, model.RedisRefreshTokenKeyPrefix+refreshToken)
 	if err != nil {
 		if werror.Is(err, redis.Nil) {
@@ -114,15 +114,15 @@ func (r *refreshTokenSystem) RefreshToken(ctx context.Context, refreshToken stri
 	return r.GenerateToken(ctx, userClaims.UserId, userClaims.UserName)
 }
 
-func (u *refreshTokenSystem) generateRefreshToken(secret string, userId int, userName string) string {
+func (u *RefreshTokenSystem) generateRefreshToken(secret string, userId int, userName string) string {
 	// RefreshToken = hmac256(accessToken,jwtConfig.Secret)
 	hencrypt := hmac.New(md5.New, []byte(secret))
-	hencrypt.Write([]byte(fmt.Sprintf("%d_%s_%d", userId, userName, time.Now().UnixNano())))
+	hencrypt.Write([]byte(fmt.Sprintf("%d_%s", userId, userName)))
 	return fmt.Sprintf("%x", hencrypt.Sum(nil))
 }
 
 func NewByBlackList(cfg *BlackListConfig, cache cache_v2.Repo) LoginTokenSystem {
-	return &blackListSystem{cfg: cfg, cache: cache}
+	return &BlackListSystem{cfg: cfg, cache: cache}
 }
 
 type BlackListConfig struct {
@@ -130,13 +130,13 @@ type BlackListConfig struct {
 	ExpireDuration time.Duration `json:"expire_duration"`
 }
 
-type blackListSystem struct {
+type BlackListSystem struct {
 	cfg *BlackListConfig
 
 	cache cache_v2.Repo
 }
 
-func (r *blackListSystem) GenerateToken(ctx context.Context, userId int, userName string) (*model.LoginResponse, error) {
+func (r *BlackListSystem) GenerateToken(ctx context.Context, userId int, userName string) (*model.LoginResponse, error) {
 	accessToken, err := token.New(r.cfg.Secret).JwtSign(int64(userId), userName, r.cfg.ExpireDuration)
 	if err != nil {
 		return nil, err
@@ -149,12 +149,12 @@ func (r *blackListSystem) GenerateToken(ctx context.Context, userId int, userNam
 	}, nil
 }
 
-func (r *blackListSystem) blackListKey(userId int64, userName string) string {
+func (r *BlackListSystem) blackListKey(userId int64, userName string) string {
 	return fmt.Sprintf("%s_%d_%s", model.RedisBlackListKeyPrefix, userId, userName)
 }
 
 // CheckBlackList 验证时，需要验证是否在黑名单
-func (r *blackListSystem) CheckBlackList(ctx context.Context, accessToken string) (bool, error) {
+func (r *BlackListSystem) CheckBlackList(ctx context.Context, accessToken string) (bool, error) {
 	claim, err := token.New(r.cfg.Secret).JwtParseUnsafe(accessToken)
 	if err != nil {
 		return false, fmt.Errorf("this token is unvalid ")
@@ -172,7 +172,7 @@ func (r *blackListSystem) CheckBlackList(ctx context.Context, accessToken string
 }
 
 // TokenCancelById 根据 userId 失效 Token
-func (r *blackListSystem) TokenCancelById(ctx context.Context, userId int, userName string) error {
+func (r *BlackListSystem) TokenCancelById(ctx context.Context, userId int, userName string) error {
 	key := r.blackListKey(int64(userId), userName)
 
 	err := r.cache.Set(ctx, key, "1", r.cfg.ExpireDuration)
@@ -182,7 +182,7 @@ func (r *blackListSystem) TokenCancelById(ctx context.Context, userId int, userN
 	return nil
 }
 
-func (r *blackListSystem) TokenCancel(ctx context.Context, accessToken string) error {
+func (r *BlackListSystem) TokenCancel(ctx context.Context, accessToken string) error {
 	claim, err := token.New(r.cfg.Secret).JwtParse(accessToken)
 	if err != nil {
 		// 解析失败，无需放到黑名单，这个token校验不过。
@@ -200,7 +200,7 @@ func (r *blackListSystem) TokenCancel(ctx context.Context, accessToken string) e
 }
 
 // RefreshToken 刷新无法校验oldToken的正确性
-func (r *blackListSystem) RefreshToken(ctx context.Context, accessToken string) (*model.LoginResponse, error) {
+func (r *BlackListSystem) RefreshToken(ctx context.Context, accessToken string) (*model.LoginResponse, error) {
 	claim, err := token.New(r.cfg.Secret).JwtParseUnsafe(accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("this token is unvalid ")

@@ -9,7 +9,7 @@ type LoginParams struct {
 }
 
 type LoginResponse struct {
-	Token interface{} // LoginResponseByRefreshToken or LoginResponseByBlackList
+	Token interface{} `json:"token"` // LoginResponseByRefreshToken or LoginResponseByBlackList
 }
 
 const (
