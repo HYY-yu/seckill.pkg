@@ -8,7 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/HYY-yu/seckill.pkg/pkg/elastic_job/job"
 	"github.com/HYY-yu/seckill.pkg/pkg/elastic_job/storage"
 )
 
@@ -23,7 +22,7 @@ func TestETCDJob(t *testing.T) {
 		err = cron.Close()
 		assert.NoError(t, err)
 	}()
-	j := &job.Job{
+	j := &Job{
 		Key:       "test_after",
 		DelayTime: time.Now().Add(time.Second * 5).Unix(),
 		Cycle:     false,
@@ -34,7 +33,7 @@ func TestETCDJob(t *testing.T) {
 		done := make(chan struct{})
 		now := time.Now()
 
-		cron.RegisterHandler("TEST", func(j *job.Job) (err error) {
+		cron.RegisterHandler("TEST", func(j *Job) (err error) {
 			t.Log("hello, world! ")
 			// 5秒后
 			delayTime := time.Unix(j.DelayTime, 0)
@@ -63,7 +62,7 @@ func TestETCDJob(t *testing.T) {
 		done := make(chan struct{})
 		now := time.Now()
 
-		testHander := func(j *job.Job) (err error) {
+		testHander := func(j *Job) (err error) {
 			t.Log("hello, world! ")
 			// 5秒后
 			delayTime := time.Unix(j.DelayTime, 0)
@@ -106,7 +105,7 @@ func TestETCDJob(t *testing.T) {
 	})
 
 	t.Run("Multi test", func(t *testing.T) {
-		j2 := &job.Job{
+		j2 := &Job{
 			Key:       "test_2",
 			DelayTime: time.Now().Add(time.Second * 10).Unix(),
 			Cycle:     false,
@@ -116,7 +115,7 @@ func TestETCDJob(t *testing.T) {
 
 		wg := sync.WaitGroup{}
 		wg.Add(2)
-		cron.RegisterHandler("TEST", func(j *job.Job) (err error) {
+		cron.RegisterHandler("TEST", func(j *Job) (err error) {
 			// 5秒后
 			delayTime := time.Unix(j.DelayTime, 0)
 			deta := delayTime.Sub(now)
@@ -126,7 +125,7 @@ func TestETCDJob(t *testing.T) {
 			wg.Done()
 			return nil
 		})
-		cron.RegisterHandler("TEST2", func(j *job.Job) (err error) {
+		cron.RegisterHandler("TEST2", func(j *Job) (err error) {
 			// 10秒后
 			delayTime := time.Unix(j.DelayTime, 0)
 			deta := delayTime.Sub(now)
@@ -158,7 +157,7 @@ func TestRedisJob(t *testing.T) {
 		err = cron.Close()
 		assert.NoError(t, err)
 	}()
-	j := &job.Job{
+	j := &Job{
 		Key:       "test_after",
 		DelayTime: time.Now().Add(time.Second * 5).Unix(),
 		Cycle:     false,
@@ -169,7 +168,7 @@ func TestRedisJob(t *testing.T) {
 		done := make(chan struct{})
 		now := time.Now()
 
-		cron.RegisterHandler("TEST", func(j *job.Job) (err error) {
+		cron.RegisterHandler("TEST", func(j *Job) (err error) {
 			t.Log("hello, world! ")
 			// 5秒后
 			delayTime := time.Unix(j.DelayTime, 0)
@@ -198,7 +197,7 @@ func TestRedisJob(t *testing.T) {
 		done := make(chan struct{})
 		now := time.Now()
 
-		testHander := func(j *job.Job) (err error) {
+		testHander := func(j *Job) (err error) {
 			t.Log("hello, world! ")
 			// time.Sleep(time.Second)
 			// 5秒后
@@ -243,7 +242,7 @@ func TestRedisJob(t *testing.T) {
 	})
 
 	t.Run("Multi test", func(t *testing.T) {
-		j2 := &job.Job{
+		j2 := &Job{
 			Key:       "test_2",
 			DelayTime: time.Now().Add(time.Second * 10).Unix(),
 			Cycle:     false,
@@ -253,7 +252,7 @@ func TestRedisJob(t *testing.T) {
 
 		wg := sync.WaitGroup{}
 		wg.Add(2)
-		cron.RegisterHandler("TEST", func(j *job.Job) (err error) {
+		cron.RegisterHandler("TEST", func(j *Job) (err error) {
 			// 5秒后
 			delayTime := time.Unix(j.DelayTime, 0)
 			deta := delayTime.Sub(now)
@@ -263,7 +262,7 @@ func TestRedisJob(t *testing.T) {
 			wg.Done()
 			return nil
 		})
-		cron.RegisterHandler("TEST2", func(j *job.Job) (err error) {
+		cron.RegisterHandler("TEST2", func(j *Job) (err error) {
 			// 10秒后
 			delayTime := time.Unix(j.DelayTime, 0)
 			deta := delayTime.Sub(now)

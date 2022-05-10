@@ -1,4 +1,4 @@
-package job
+package elastic_job
 
 import (
 	"encoding/json"

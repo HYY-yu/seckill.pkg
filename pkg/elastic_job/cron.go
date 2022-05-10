@@ -8,7 +8,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/HYY-yu/seckill.pkg/pkg/elastic_job/job"
 	"github.com/HYY-yu/seckill.pkg/pkg/elastic_job/storage"
 	"github.com/HYY-yu/seckill.pkg/pkg/encrypt"
 )
@@ -16,10 +15,10 @@ import (
 // ElasticJob 分布式定时（延时）执行器
 type ElasticJob interface {
 	// AddJob 添加新任务，此任务将发送到存储器中进行时间计算，并监听存储器的回调事件
-	AddJob(j *job.Job) error
+	AddJob(j *Job) error
 	// RegisterHandler 收到回调事件，执行回调函数链
 	// 利用ETCD做分布式锁，保证回调链只有一个能被执行。
-	RegisterHandler(handlerTag string, h job.Handler)
+	RegisterHandler(handlerTag string, h Handler)
 
 	Close() error
 }
@@ -113,7 +112,7 @@ func (e *elasticJob) run() {
 		select {
 		case wresp := <-wc:
 			e.logger.Sugar().Infof("a notification event: %s ", wresp.Key)
-			respJob, err := job.UnmarshalJson(wresp.Value)
+			respJob, err := UnmarshalJson(wresp.Value)
 			if err != nil {
 				e.logger.Error("cannot unmarshal job value",
 					zap.String("key", wresp.Key),
@@ -145,7 +144,7 @@ func (e *elasticJob) run() {
 					return
 				}
 
-				err = hander.(job.Handler)(respJob)
+				err = hander.(Handler)(respJob)
 				if err != nil {
 					e.logger.Error("handler report error",
 						zap.String("key", wresp.Key),
@@ -185,7 +184,7 @@ func (e *elasticJob) run() {
 	}
 }
 
-func (e *elasticJob) AddJob(j *job.Job) error {
+func (e *elasticJob) AddJob(j *Job) error {
 	value := j.MarshalJson()
 	delay := time.Until(time.Unix(j.DelayTime, 0))
 	if delay <= 0 {
@@ -195,7 +194,7 @@ func (e *elasticJob) AddJob(j *job.Job) error {
 	return e.store.Save(j.Key, value, delay)
 }
 
-func (e *elasticJob) RegisterHandler(handlerTag string, h job.Handler) {
+func (e *elasticJob) RegisterHandler(handlerTag string, h Handler) {
 	e.handlers.Store(handlerTag, h)
 }
 

@@ -31,6 +31,8 @@ const (
 	TooManyRequests    = 10002
 	AuthorizationError = 10003
 	ParamBindError     = 10004
+
+	TokenExpired = 10005
 )
 
 // Text 注册表转换

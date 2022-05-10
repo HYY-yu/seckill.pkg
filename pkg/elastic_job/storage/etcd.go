@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/spf13/cast"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/concurrency"
 )
@@ -70,7 +70,7 @@ func (e *etcdStorage) run() {
 	getResp, _ := e.etcdClient.Get(e.ctx, KeyForWatchReversion)
 	if getResp != nil && getResp.Count > 0 {
 		// 有这个key，则读取reversion
-		reversion = gconv.Int64(string(getResp.Kvs[0].Value))
+		reversion = cast.ToInt64(string(getResp.Kvs[0].Value))
 		_, _ = e.etcdClient.KeepAlive(e.ctx, clientv3.LeaseID(getResp.Kvs[0].Lease))
 	} else {
 		// 没有这个Key ,创建一个新Key

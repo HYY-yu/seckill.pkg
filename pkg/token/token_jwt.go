@@ -1,6 +1,8 @@
 package token
 
 import (
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -29,6 +31,21 @@ func (t *token) JwtSign(userId int64, userName string, expireDuration time.Durat
 	return
 }
 
+func (t *token) JwtParseUnsafe(tokenString string) (*claims, error) {
+	tokenClaims, _, err := new(jwt.Parser).ParseUnverified(tokenString, &claims{})
+	if tokenClaims != nil {
+		if claims, ok := tokenClaims.Claims.(*claims); ok {
+			return claims, nil
+		}
+	}
+	return nil, err
+}
+
+var (
+	ErrorTokenCannotParse        = errors.New("cannot parse the token. ")
+	ErrorTokenExpiredOrNotActive = errors.New("token expired or not active. ")
+)
+
 // JwtParse 从 JWT 中解密数据
 func (t *token) JwtParse(tokenString string) (*claims, error) {
 	tokenClaims, err := jwt.ParseWithClaims(tokenString, &claims{}, func(token *jwt.Token) (interface{}, error) {
@@ -38,8 +55,34 @@ func (t *token) JwtParse(tokenString string) (*claims, error) {
 	if tokenClaims != nil {
 		if claims, ok := tokenClaims.Claims.(*claims); ok && tokenClaims.Valid {
 			return claims, nil
+		} else {
+			if ve, ok := err.(*jwt.ValidationError); ok {
+				if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+					return nil, ErrorTokenCannotParse
+				} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
+					// Token is either expired or not active yet
+					return nil, ErrorTokenExpiredOrNotActive
+				} else {
+					return nil, ErrorTokenCannotParse
+				}
+			} else {
+				return nil, ErrorTokenCannotParse
+			}
 		}
 	}
+	return nil, ErrorTokenCannotParse
+}
 
-	return nil, err
+func (t *token) JwtParseFromAuthorizationHeader(tokenString string) (*claims, error) {
+	tokenString = stripBearerPrefixFromTokenString(tokenString)
+	return t.JwtParse(tokenString)
+}
+
+// Strips 'Bearer ' prefix from bearer token string
+func stripBearerPrefixFromTokenString(tok string) string {
+	// Should be a bearer token
+	if len(tok) > 6 && strings.ToUpper(tok[0:7]) == "BEARER " {
+		return tok[7:]
+	}
+	return tok
 }

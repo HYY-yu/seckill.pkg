@@ -19,8 +19,13 @@ type Token interface {
 	// JwtSign 签名
 	JwtSign(userId int64, userName string, expireDuration time.Duration) (tokenString string, err error)
 
+	JwtParseUnsafe(tokenString string) (*claims, error)
+
 	// JwtParse 解密
 	JwtParse(tokenString string) (*claims, error)
+
+	// JwtParseFromAuthorizationHeader 解密，去掉 BEARER
+	JwtParseFromAuthorizationHeader(tokenString string) (*claims, error)
 
 	// UrlSign URL 签名
 	// 防参数篡改，防重放攻击

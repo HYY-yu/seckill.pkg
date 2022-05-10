@@ -19,13 +19,20 @@ func (m *middleware) Jwt(ctx core.Context) (userId int64, userName string, err r
 		return
 	}
 
-	claims, errParse := token.New(m.jwtSecret).JwtParse(auth)
+	claims, errParse := token.New(m.jwtSecret).JwtParseFromAuthorizationHeader(auth)
 	if errParse != nil {
+		if errParse == token.ErrorTokenExpiredOrNotActive {
+			// 过期需刷新
+			err = response.NewErrorAutoMsg(
+				http.StatusUnauthorized,
+				response.TokenExpired,
+			)
+			return
+		}
 		err = response.NewErrorAutoMsg(
 			http.StatusUnauthorized,
 			response.AuthorizationError,
 		).WithErr(errParse)
-
 		return
 	}
 
@@ -35,7 +42,6 @@ func (m *middleware) Jwt(ctx core.Context) (userId int64, userName string, err r
 			http.StatusUnauthorized,
 			response.AuthorizationError,
 		).WithErr(errors.New("claims.UserID <= 0 "))
-
 		return
 	}
 	userName = claims.UserName
