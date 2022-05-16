@@ -28,6 +28,7 @@ type option struct {
 	file           io.Writer
 	timeLayout     string
 	disableConsole bool
+	printJson      bool
 }
 
 // WithDebugLevel only greater than 'level' will output
@@ -115,6 +116,13 @@ func WithDisableConsole() Option {
 	}
 }
 
+// WithJsonFormat write log by json format
+func WithJsonFormat() Option {
+	return func(opt *option) {
+		opt.printJson = true
+	}
+}
+
 // New return a json-encoder zap logger,
 func New(opts ...Option) (*zap.Logger, error) {
 	opt := &option{level: DefaultLevel, fields: make(map[string]string)}
@@ -145,7 +153,9 @@ func New(opts ...Option) (*zap.Logger, error) {
 	}
 
 	jsonEncoder := zapcore.NewJSONEncoder(encoderConfig)
-	consoleEncoder := zapcore.NewConsoleEncoder(encoderConfig)
+	if !opt.printJson {
+		jsonEncoder = zapcore.NewConsoleEncoder(encoderConfig)
+	}
 
 	// lowPriority usd by info\debug\warn
 	lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
@@ -162,20 +172,19 @@ func New(opts ...Option) (*zap.Logger, error) {
 
 	core := zapcore.NewTee()
 
+	// 不打印到 Console，就打印到 File，Console 和 File 二选一
 	if !opt.disableConsole {
 		core = zapcore.NewTee(
-			zapcore.NewCore(consoleEncoder,
+			zapcore.NewCore(jsonEncoder,
 				zapcore.NewMultiWriteSyncer(stdout),
 				lowPriority,
 			),
-			zapcore.NewCore(consoleEncoder,
+			zapcore.NewCore(jsonEncoder,
 				zapcore.NewMultiWriteSyncer(stderr),
 				highPriority,
 			),
 		)
-	}
-
-	if opt.file != nil {
+	} else {
 		core = zapcore.NewTee(core,
 			zapcore.NewCore(jsonEncoder,
 				zapcore.AddSync(opt.file),
