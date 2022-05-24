@@ -15,7 +15,7 @@ require (
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
-	github.com/prometheus/client_golang v1.11.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/rs/cors/wrapper/gin v0.0.0-20220223021805-a4a5ce87d5a2
 	github.com/spf13/cast v1.4.1
 	github.com/stretchr/testify v1.7.1
@@ -37,4 +37,5 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gorm.io/driver/mysql v1.3.3
 	gorm.io/gorm v1.23.4
+	gorm.io/plugin/prometheus v0.0.0-20220517015831-ca6bfaf20bf4
 )

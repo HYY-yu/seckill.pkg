@@ -11,7 +11,7 @@ import (
 	"github.com/HYY-yu/werror"
 	"github.com/go-redis/redis/v8"
 
-	"github.com/HYY-yu/seckill.pkg/cache_v2"
+	"github.com/HYY-yu/seckill.pkg/cache"
 	"github.com/HYY-yu/seckill.pkg/pkg/login/model"
 	"github.com/HYY-yu/seckill.pkg/pkg/token"
 )
@@ -36,7 +36,7 @@ type LoginTokenSystem interface {
 	RefreshToken(ctx context.Context, oldToken string) (*model.LoginResponse, error)
 }
 
-func NewByRefreshToken(cfg *RefreshTokenConfig, cache cache_v2.Repo) LoginTokenSystem {
+func NewByRefreshToken(cfg *RefreshTokenConfig, cache cache.Repo) LoginTokenSystem {
 	return &RefreshTokenSystem{cfg: cfg, cache: cache}
 }
 
@@ -49,7 +49,7 @@ type RefreshTokenConfig struct {
 type RefreshTokenSystem struct {
 	cfg *RefreshTokenConfig
 
-	cache cache_v2.Repo
+	cache cache.Repo
 }
 
 func (r *RefreshTokenSystem) GenerateToken(ctx context.Context, userId int, userName string) (*model.LoginResponse, error) {
@@ -121,7 +121,7 @@ func (u *RefreshTokenSystem) generateRefreshToken(secret string, userId int, use
 	return fmt.Sprintf("%x", hencrypt.Sum(nil))
 }
 
-func NewByBlackList(cfg *BlackListConfig, cache cache_v2.Repo) LoginTokenSystem {
+func NewByBlackList(cfg *BlackListConfig, cache cache.Repo) LoginTokenSystem {
 	return &BlackListSystem{cfg: cfg, cache: cache}
 }
 
@@ -133,7 +133,7 @@ type BlackListConfig struct {
 type BlackListSystem struct {
 	cfg *BlackListConfig
 
-	cache cache_v2.Repo
+	cache cache.Repo
 }
 
 func (r *BlackListSystem) GenerateToken(ctx context.Context, userId int, userName string) (*model.LoginResponse, error) {

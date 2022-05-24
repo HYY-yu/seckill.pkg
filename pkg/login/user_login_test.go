@@ -7,13 +7,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/HYY-yu/seckill.pkg/cache_v2"
+	"github.com/HYY-yu/seckill.pkg/cache"
 	"github.com/HYY-yu/seckill.pkg/pkg/login/model"
 	"github.com/HYY-yu/seckill.pkg/pkg/token"
 )
 
 func TestRefreshToken(t *testing.T) {
-	cacheRepo, err := cache_v2.New("test", &cache_v2.RedisConf{
+	cacheRepo, err := cache.New("test", &cache.RedisConf{
 		Addr: "127.0.0.1:6379",
 		Pass: "redis",
 	})
@@ -83,7 +83,7 @@ func TestRefreshToken(t *testing.T) {
 }
 
 func TestBlackList(t *testing.T) {
-	cacheRepo, err := cache_v2.New("test", &cache_v2.RedisConf{
+	cacheRepo, err := cache.New("test", &cache.RedisConf{
 		Addr: "127.0.0.1:6379",
 		Pass: "redis",
 	})

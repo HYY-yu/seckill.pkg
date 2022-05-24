@@ -13,27 +13,25 @@ var metricsRequestsTotal *prometheus.CounterVec
 var metricsRequestsCost *prometheus.HistogramVec
 
 // InitMetrics 主动注册 Metric 指标
-func InitMetrics(namespace string, subsystem string) {
+func InitMetrics(namespace string) {
 	// metricsRequestsTotal metrics for request total 计数器（Counter）
 	metricsRequestsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: namespace,
-			Subsystem: subsystem,
-			Name:      "requests_total",
+			Name:      "http_api_requests_total",
 			Help:      "request(ms) total",
 		},
-		[]string{"method", "path"},
+		[]string{"server_name", "method", "path"},
 	)
 
 	// metricsRequestsCost metrics for requests cost 累积直方图（Histogram）
 	metricsRequestsCost = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: namespace,
-			Subsystem: subsystem,
-			Name:      "requests_cost",
+			Name:      "http_api_requests_cost",
 			Help:      "request(ms) cost milliseconds",
 		},
-		[]string{"method", "path", "http_code", "business_code", "cost_milliseconds", "trace_id"},
+		[]string{"server_name", "method", "path", "http_code", "business_code", "cost_milliseconds", "trace_id"},
 	)
 
 	prometheus.MustRegister(metricsRequestsTotal, metricsRequestsCost)
@@ -41,13 +39,15 @@ func InitMetrics(namespace string, subsystem string) {
 
 // RecordMetrics 记录指标
 // 请注意需要先调用 InitMetrics
-func RecordMetrics(method, uri string, httpCode, businessCode int, costSeconds float64, traceId string) {
+func RecordMetrics(serverName string, method, uri string, httpCode, businessCode int, costSeconds float64, traceId string) {
 	metricsRequestsTotal.With(prometheus.Labels{
-		"method": method,
-		"path":   uri,
+		"server_name": serverName,
+		"method":      method,
+		"path":        uri,
 	}).Inc()
 
 	metricsRequestsCost.With(prometheus.Labels{
+		"server_name":       serverName,
 		"method":            method,
 		"path":              uri,
 		"http_code":         cast.ToString(httpCode),

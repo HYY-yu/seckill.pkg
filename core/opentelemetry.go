@@ -15,7 +15,7 @@ import (
 )
 
 // RecordMetrics 记录prometheus指标用
-type RecordMetrics func(method, uri string, httpCode, businessCode int, costSeconds float64, traceId string)
+type RecordMetrics func(serverName string, method, uri string, httpCode, businessCode int, costSeconds float64, traceId string)
 
 // OpenTelemetry
 // logger \ metrics \ trace 三者归一
@@ -89,6 +89,7 @@ func (o *OpenTelemetry) Telemetry(c Context, serverName string) {
 	if o.recordMetrics != nil {
 		// metrics output
 		o.recordMetrics(
+			serverName,
 			telemetry.Method,
 			telemetry.Path,
 			telemetry.HttpCode,

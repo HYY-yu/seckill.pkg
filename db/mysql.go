@@ -9,6 +9,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
+	"gorm.io/plugin/prometheus"
 )
 
 var _ Repo = (*dbRepo)(nil)
@@ -96,6 +97,17 @@ func dbConnect(cfg *DBConfig) (*gorm.DB, error) {
 
 	// 使用插件
 	err = db.Use(NewPlugin(cfg.ServerName, WithDBName(cfg.Name)))
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Use(prometheus.New(prometheus.Config{
+		DBName: cfg.ServerName, // `DBName` as metrics label
+		// RefreshInterval: 15,                          // refresh metrics interval (default 15 seconds)
+		MetricsCollector: []prometheus.MetricsCollector{
+			&prometheus.MySQL{VariableNames: []string{"Threads_connected", "Slow_queries", "Table_locks_waited"}},
+		},
+	}))
 	if err != nil {
 		return nil, err
 	}
