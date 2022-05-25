@@ -20,7 +20,7 @@ func NewJobMetrics(namespace string) *JobMetrics {
 			Name:      "metrics_elastic_job_add_total",
 			Help:      " The total number of calls to AddJob during the program run. ",
 		},
-		[]string{"server_name", "job_key", "trace_id"},
+		[]string{"server_name", "job_tag"},
 	)
 
 	j.metricsJobRunCost = prometheus.NewHistogramVec(
@@ -30,7 +30,7 @@ func NewJobMetrics(namespace string) *JobMetrics {
 			Help:      " Job running time.  ",
 			Buckets:   []float64{.005, .01, .025, .05, .1, 1, 2.5, 5},
 		},
-		[]string{"server_name", "job_key"},
+		[]string{"server_name", "job_tag"},
 	)
 
 	// 自动注册到 prometheus Default
@@ -38,24 +38,19 @@ func NewJobMetrics(namespace string) *JobMetrics {
 	return j
 }
 
-func (j *JobMetrics) MetricsAddTotal(serverName, jobKey, traceId string) {
+func (j *JobMetrics) MetricsAddTotal(serverName, jobTag string) {
 	if len(serverName) == 0 {
 		serverName = "metrics_job"
-	}
-
-	if len(traceId) == 0 {
-		traceId = "none"
 	}
 
 	j.metricsJobAddTotal.With(
 		prometheus.Labels{
 			"server_name": serverName,
-			"job_key":     jobKey,
-			"trace_id":    traceId,
+			"job_tag":     jobTag,
 		}).Inc()
 }
 
-func (j *JobMetrics) MetricsRunCost(serverName, jobKey string, costSeconds float64) {
+func (j *JobMetrics) MetricsRunCost(serverName, jobTag string, costSeconds float64) {
 	if len(serverName) == 0 {
 		serverName = "metrics_job"
 	}
@@ -63,6 +58,6 @@ func (j *JobMetrics) MetricsRunCost(serverName, jobKey string, costSeconds float
 	j.metricsJobRunCost.With(
 		prometheus.Labels{
 			"server_name": serverName,
-			"job_key":     jobKey,
+			"job_tag":     jobTag,
 		}).Observe(costSeconds)
 }

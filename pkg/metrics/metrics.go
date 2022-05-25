@@ -21,7 +21,7 @@ func InitMetrics(namespace string) {
 			Name:      "http_api_requests_total",
 			Help:      "request(ms) total",
 		},
-		[]string{"server_name", "method", "path"},
+		[]string{"server_name", "method", "path", "http_code", "business_code"},
 	)
 
 	// metricsRequestsCost metrics for requests cost 累积直方图（Histogram）
@@ -31,7 +31,7 @@ func InitMetrics(namespace string) {
 			Name:      "http_api_requests_cost",
 			Help:      "request(ms) cost milliseconds",
 		},
-		[]string{"server_name", "method", "path", "http_code", "business_code", "cost_milliseconds", "trace_id"},
+		[]string{"server_name", "method", "path", "http_code", "business_code"},
 	)
 
 	prometheus.MustRegister(metricsRequestsTotal, metricsRequestsCost)
@@ -40,19 +40,19 @@ func InitMetrics(namespace string) {
 // RecordMetrics 记录指标
 // 请注意需要先调用 InitMetrics
 func RecordMetrics(serverName string, method, uri string, httpCode, businessCode int, costSeconds float64, traceId string) {
+	// 不要在指标中出现 traceId ，容易导致指标爆炸
+	_ = traceId
 	metricsRequestsTotal.With(prometheus.Labels{
-		"server_name": serverName,
-		"method":      method,
-		"path":        uri,
+		"server_name":   serverName,
+		"method":        method,
+		"path":          uri,
+		"http_code":     cast.ToString(httpCode),
+		"business_code": cast.ToString(businessCode),
 	}).Inc()
 
 	metricsRequestsCost.With(prometheus.Labels{
-		"server_name":       serverName,
-		"method":            method,
-		"path":              uri,
-		"http_code":         cast.ToString(httpCode),
-		"business_code":     cast.ToString(businessCode),
-		"cost_milliseconds": cast.ToString(costSeconds * 1000),
-		"trace_id":          traceId,
+		"server_name": serverName,
+		"method":      method,
+		"path":        uri,
 	}).Observe(costSeconds)
 }

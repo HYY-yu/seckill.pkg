@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/HYY-yu/seckill.pkg/pkg/elastic_job/storage"
@@ -178,7 +177,7 @@ func (e *elasticJob) run() {
 
 				costSeconds := time.Since(ts).Seconds()
 				if e.cfg.shouldMetrics {
-					e.metrics.MetricsRunCost(e.cfg.serverName, respJob.Key, costSeconds)
+					e.metrics.MetricsRunCost(e.cfg.serverName, respJob.Tag, costSeconds)
 				}
 
 				time.Sleep(time.Second * 3)
@@ -224,12 +223,7 @@ func (e *elasticJob) AddJob(ctx context.Context, j *Job) error {
 		return err
 	}
 	if e.cfg.shouldMetrics {
-		span := trace.SpanFromContext(ctx)
-		var traceId string
-		if span.SpanContext().HasTraceID() {
-			traceId = span.SpanContext().TraceID().String()
-		}
-		e.metrics.MetricsAddTotal(e.cfg.serverName, j.Key, traceId)
+		e.metrics.MetricsAddTotal(e.cfg.serverName, j.Tag)
 	}
 
 	return nil

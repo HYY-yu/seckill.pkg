@@ -318,6 +318,7 @@ func TestMetrics(t *testing.T) {
 		if deta < 2 {
 			t.Errorf("cron time error,now time is %s delayTime is %s ", now.String(), delayTime.String())
 		}
+		time.Sleep(1 * time.Second)
 		wg.Done()
 		return nil
 	})
