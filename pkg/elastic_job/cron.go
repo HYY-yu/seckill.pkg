@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/HYY-yu/seckill.pkg/pkg/elastic_job/storage"
@@ -15,7 +16,7 @@ import (
 // ElasticJob 分布式定时（延时）执行器
 type ElasticJob interface {
 	// AddJob 添加新任务，此任务将发送到存储器中进行时间计算，并监听存储器的回调事件
-	AddJob(j *Job) error
+	AddJob(ctx context.Context, j *Job) error
 	// RegisterHandler 收到回调事件，执行回调函数链
 	// 利用ETCD做分布式锁，保证回调链只有一个能被执行。
 	RegisterHandler(handlerTag string, h Handler)
@@ -28,6 +29,9 @@ type config struct {
 	storageConfig *storage.Config
 
 	logger *zap.Logger
+
+	shouldMetrics bool
+	serverName    string
 }
 
 type Options func(c *config)
@@ -45,6 +49,18 @@ func WithLogger(l *zap.Logger) Options {
 	}
 }
 
+func WithMetrics() Options {
+	return func(c *config) {
+		c.shouldMetrics = true
+	}
+}
+
+func WithServerName(serverName string) Options {
+	return func(c *config) {
+		c.serverName = serverName
+	}
+}
+
 type elasticJob struct {
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -55,6 +71,8 @@ type elasticJob struct {
 	handlers *sync.Map
 
 	logger *zap.Logger
+
+	metrics *JobMetrics
 }
 
 func New(opts ...Options) (ElasticJob, error) {
@@ -82,6 +100,10 @@ func New(opts ...Options) (ElasticJob, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if cfg.shouldMetrics {
+		cron.metrics = NewJobMetrics("")
 	}
 
 	// init storage
@@ -143,6 +165,7 @@ func (e *elasticJob) run() {
 					)
 					return
 				}
+				ts := time.Now()
 
 				err = hander.(Handler)(respJob)
 				if err != nil {
@@ -151,6 +174,11 @@ func (e *elasticJob) run() {
 						zap.String("tag", respJob.Tag),
 						zap.Error(err),
 					)
+				}
+
+				costSeconds := time.Since(ts).Seconds()
+				if e.cfg.shouldMetrics {
+					e.metrics.MetricsRunCost(e.cfg.serverName, respJob.Key, costSeconds)
 				}
 
 				time.Sleep(time.Second * 3)
@@ -168,7 +196,7 @@ func (e *elasticJob) run() {
 			if respJob.Cycle {
 				// 再次写入，注意，循环任务无可用性保证。
 				// 有可能会中断循环
-				err = e.AddJob(respJob)
+				err = e.AddJob(e.ctx, respJob)
 				if err != nil {
 					e.logger.Error("deal cycle job error ",
 						zap.String("key", wresp.Key),
@@ -184,14 +212,27 @@ func (e *elasticJob) run() {
 	}
 }
 
-func (e *elasticJob) AddJob(j *Job) error {
+func (e *elasticJob) AddJob(ctx context.Context, j *Job) error {
 	value := j.MarshalJson()
 	delay := time.Until(time.Unix(j.DelayTime, 0))
 	if delay <= 0 {
 		return fmt.Errorf("the delay_time must happen in the future. ")
 	}
 
-	return e.store.Save(j.Key, value, delay)
+	err := e.store.Save(j.Key, value, delay)
+	if err != nil {
+		return err
+	}
+	if e.cfg.shouldMetrics {
+		span := trace.SpanFromContext(ctx)
+		var traceId string
+		if span.SpanContext().HasTraceID() {
+			traceId = span.SpanContext().TraceID().String()
+		}
+		e.metrics.MetricsAddTotal(e.cfg.serverName, j.Key, traceId)
+	}
+
+	return nil
 }
 
 func (e *elasticJob) RegisterHandler(handlerTag string, h Handler) {

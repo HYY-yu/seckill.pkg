@@ -300,7 +300,7 @@ func (c *context) SvcContext() SvcContext {
 
 // URI unescape后的uri
 func (c *context) URI() string {
-	uri, _ := url.QueryUnescape(c.ctx.Request.URL.RequestURI())
+	uri, _ := url.QueryUnescape(c.ctx.Request.URL.Path)
 	return uri
 }
 

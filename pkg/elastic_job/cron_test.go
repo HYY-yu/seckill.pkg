@@ -1,11 +1,16 @@
 package elastic_job
 
 import (
+	"bufio"
 	"context"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/HYY-yu/seckill.pkg/pkg/elastic_job/storage"
@@ -46,7 +51,7 @@ func TestETCDJob(t *testing.T) {
 			return nil
 		})
 
-		err = cron.AddJob(j)
+		err = cron.AddJob(context.Background(), j)
 		assert.NoError(t, err)
 
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
@@ -76,7 +81,7 @@ func TestETCDJob(t *testing.T) {
 		}
 		cron.RegisterHandler("TEST", testHander)
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
-		err = cron.AddJob(j)
+		err = cron.AddJob(context.Background(), j)
 		assert.NoError(t, err)
 
 		go func() {
@@ -136,8 +141,8 @@ func TestETCDJob(t *testing.T) {
 			return nil
 		})
 
-		err = cron.AddJob(j)
-		err = cron.AddJob(j2)
+		err = cron.AddJob(context.Background(), j)
+		err = cron.AddJob(context.Background(), j2)
 		assert.NoError(t, err)
 
 		wg.Wait()
@@ -181,7 +186,7 @@ func TestRedisJob(t *testing.T) {
 			return nil
 		})
 
-		err = cron.AddJob(j)
+		err = cron.AddJob(context.Background(), j)
 		assert.NoError(t, err)
 
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
@@ -212,7 +217,7 @@ func TestRedisJob(t *testing.T) {
 		}
 		cron.RegisterHandler("TEST", testHander)
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
-		err = cron.AddJob(j)
+		err = cron.AddJob(context.Background(), j)
 		assert.NoError(t, err)
 
 		go func() {
@@ -273,10 +278,67 @@ func TestRedisJob(t *testing.T) {
 			return nil
 		})
 
-		err = cron.AddJob(j)
-		err = cron.AddJob(j2)
+		err = cron.AddJob(context.Background(), j)
+		err = cron.AddJob(context.Background(), j2)
 		assert.NoError(t, err)
 
 		wg.Wait()
 	})
+}
+
+func TestMetrics(t *testing.T) {
+	cron, err := New(WithStorage(storage.ETCD,
+		&storage.Config{
+			Endpoints:   []string{"0.0.0.0:2379", "0.0.0.0:12379", "0.0.0.0:22379"},
+			DialTimeout: time.Second,
+		}), WithMetrics(), WithServerName("test"))
+
+	assert.NoError(t, err)
+	defer func() {
+		err = cron.Close()
+		assert.NoError(t, err)
+	}()
+	j := &Job{
+		Key:       "test_after",
+		DelayTime: time.Now().Add(time.Second * 2).Unix(),
+		Cycle:     false,
+		Tag:       "TEST",
+	}
+	now := time.Now()
+
+	err = cron.AddJob(context.Background(), j)
+	assert.NoError(t, err)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	cron.RegisterHandler("TEST", func(j *Job) (err error) {
+		// 2秒后
+		delayTime := time.Unix(j.DelayTime, 0)
+		deta := delayTime.Sub(now)
+		if deta < 2 {
+			t.Errorf("cron time error,now time is %s delayTime is %s ", now.String(), delayTime.String())
+		}
+		wg.Done()
+		return nil
+	})
+
+	wg.Wait()
+
+	ph := promhttp.Handler()
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	rec := httptest.NewRecorder()
+	ph.ServeHTTP(rec, req)
+	resp := rec.Result()
+
+	s := bufio.NewScanner(resp.Body)
+	for s.Scan() {
+		line := s.Text()
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		if strings.HasPrefix(line, "metrics_elastic_job") {
+			println(line)
+		}
+	}
 }
