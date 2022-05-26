@@ -31,7 +31,7 @@ func InitMetrics(namespace string) {
 			Name:      "http_api_requests_cost",
 			Help:      "request(ms) cost milliseconds",
 		},
-		[]string{"server_name", "method", "path", "http_code", "business_code"},
+		[]string{"server_name", "method", "path"},
 	)
 
 	prometheus.MustRegister(metricsRequestsTotal, metricsRequestsCost)
