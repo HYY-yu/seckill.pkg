@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	github.com/BurntSushi/toml v0.4.1 // indirect
-	github.com/HYY-yu/werror v1.0.1
 	github.com/VividCortex/mysqlerr v1.0.0
 	github.com/bsm/redislock v0.7.2
 	github.com/fsnotify/fsnotify v1.5.1 // indirect

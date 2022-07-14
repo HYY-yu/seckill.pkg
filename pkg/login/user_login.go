@@ -5,10 +5,10 @@ import (
 	"crypto/hmac"
 	"crypto/md5"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
-	"github.com/HYY-yu/werror"
 	"github.com/go-redis/redis/v8"
 
 	"github.com/HYY-yu/seckill.pkg/cache"
@@ -96,7 +96,7 @@ func (r *RefreshTokenSystem) TokenCancel(ctx context.Context, refreshToken strin
 func (r *RefreshTokenSystem) RefreshToken(ctx context.Context, refreshToken string) (*model.LoginResponse, error) {
 	userJson, err := r.cache.Get(ctx, model.RedisRefreshTokenKeyPrefix+refreshToken)
 	if err != nil {
-		if werror.Is(err, redis.Nil) {
+		if errors.Is(err, redis.Nil) {
 			return nil, model.RefreshTokenExpired
 		}
 		return nil, err
@@ -163,7 +163,7 @@ func (r *BlackListSystem) CheckBlackList(ctx context.Context, accessToken string
 
 	a, err := r.cache.Get(ctx, key)
 	if err != nil {
-		if werror.Is(err, redis.Nil) {
+		if errors.Is(err, redis.Nil) {
 			return false, nil
 		}
 		return false, err

@@ -3,9 +3,9 @@ package cache
 // cache 使用 go-redis 提供的 Trace
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/HYY-yu/werror"
 	"github.com/go-redis/redis/extra/redisotel/v8"
 	"github.com/go-redis/redis/v8"
 	"github.com/prometheus/client_golang/prometheus"
@@ -81,7 +81,7 @@ func redisConnect(serverName string, cfg *RedisConf) (*redis.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := client.Ping(ctx).Err(); err != nil {
-		return nil, werror.Wrap(err, "ping redis err")
+		return nil, fmt.Errorf("ping redis error %w", err)
 	}
 	return client, nil
 }
@@ -90,7 +90,7 @@ func redisConnect(serverName string, cfg *RedisConf) (*redis.Client, error) {
 func (c *cacheRepo) Set(ctx context.Context, key, value string, ttl time.Duration) error {
 	var err error
 	if err = c.client.Set(ctx, key, value, ttl).Err(); err != nil {
-		err = werror.Wrapf(err, "redis set key: %s err", key)
+		err = fmt.Errorf("redis set key: %s err: %w ", key, err)
 	}
 	return err
 }
@@ -100,7 +100,7 @@ func (c *cacheRepo) Get(ctx context.Context, key string) (string, error) {
 	var err error
 	value, err := c.client.Get(ctx, key).Result()
 	if err != nil {
-		err = werror.Wrapf(err, "redis get key: %s err", key)
+		err = fmt.Errorf("redis get key: %s err %w", key, err)
 	}
 	return value, err
 }
@@ -109,7 +109,7 @@ func (c *cacheRepo) Get(ctx context.Context, key string) (string, error) {
 func (c *cacheRepo) TTL(ctx context.Context, key string) (time.Duration, error) {
 	ttl, err := c.client.TTL(ctx, key).Result()
 	if err != nil {
-		return -1, werror.Wrapf(err, "redis get key: %s err", key)
+		return -1, fmt.Errorf("redis get key: %s err %w", key, err)
 	}
 
 	return ttl, nil
@@ -142,7 +142,7 @@ func (c *cacheRepo) Del(ctx context.Context, key string) bool {
 	}
 	value, err := c.client.Del(ctx, key).Result()
 	if err != nil {
-		err = werror.Wrapf(err, "redis del key: %s err", key)
+		err = fmt.Errorf("redis del key: %s err %w ", key, err)
 	}
 	return value > 0
 }
@@ -151,7 +151,7 @@ func (c *cacheRepo) Incr(ctx context.Context, key string) int64 {
 	var err error
 	value, err := c.client.Incr(ctx, key).Result()
 	if err != nil {
-		err = werror.Wrapf(err, "redis Incr key: %s err", key)
+		err = fmt.Errorf("redis Incr key: %s err %w ", key, err)
 	}
 	return value
 }

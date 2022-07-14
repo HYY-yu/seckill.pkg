@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/HYY-yu/werror"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -77,7 +76,7 @@ func dbConnect(cfg *DBConfig) (*gorm.DB, error) {
 	})
 
 	if err != nil {
-		return nil, werror.Wrap(err, fmt.Sprintf("[db connection failed] Database name: %s", cfg.Name))
+		return nil, fmt.Errorf("[db connection failed] Database name: %s %w ", cfg.Name, err)
 	}
 	db.Set("gorm:table_options", "CHARSET=utf8mb4")
 
