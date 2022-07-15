@@ -3,6 +3,8 @@ package response
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/gogf/gf/v2/errors/gerror"
 )
 
 var _ Error = (*err)(nil)
@@ -73,7 +75,7 @@ func (e *err) Error() string {
 
 // WithErr 封装真实 err
 func (e *err) WithErr(err error) Error {
-	e.Err = err
+	e.Err = gerror.WrapSkip(1, err, "WithErr")
 	return e
 }
 
