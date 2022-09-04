@@ -114,7 +114,7 @@ func (r *RefreshTokenSystem) RefreshToken(ctx context.Context, refreshToken stri
 	return r.GenerateToken(ctx, userClaims.UserId, userClaims.UserName)
 }
 
-func (u *RefreshTokenSystem) generateRefreshToken(secret string, userId int, userName string) string {
+func (r *RefreshTokenSystem) generateRefreshToken(secret string, userId int, userName string) string {
 	// RefreshToken = hmac256(accessToken,jwtConfig.Secret)
 	hencrypt := hmac.New(md5.New, []byte(secret))
 	hencrypt.Write([]byte(fmt.Sprintf("%d_%s", userId, userName)))

@@ -73,14 +73,18 @@ func GenerateRSAFile(pubKeyFilename, priKeyFilename string, keyLength RSAKeyLen)
 	if err != nil {
 		return err
 	}
-	defer pubWriter.Close()
+	defer func(pubWriter *os.File) {
+		_ = pubWriter.Close()
+	}(pubWriter)
 
 	// 创建私钥文件
 	priWriter, err := os.Create(priKeyFilename)
 	if err != nil {
 		return err
 	}
-	defer priWriter.Close()
+	defer func(priWriter *os.File) {
+		_ = priWriter.Close()
+	}(priWriter)
 
 	// 生成密钥对
 	err = writeRSAKeyPair(pubWriter, priWriter, keyLength)

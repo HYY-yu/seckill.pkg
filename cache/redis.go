@@ -12,15 +12,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-type Option func(*option)
-
-type option struct {
-}
-
-func newOption() *option {
-	return &option{}
-}
-
 type Repo interface {
 	i()
 	Set(ctx context.Context, key, value string, ttl time.Duration) error

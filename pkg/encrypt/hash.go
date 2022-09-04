@@ -36,7 +36,9 @@ func SHA1FileHash(path string) (encrypt string, err error) {
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 	h := sha1.New()
 	_, err = io.Copy(h, f)
 	if err != nil {

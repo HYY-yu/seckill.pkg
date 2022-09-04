@@ -23,7 +23,9 @@ func TestRegister(t *testing.T) {
 		DialTimeout: time.Second,
 		Password:    "redis",
 	})
-	defer rc.Close()
+	defer func(rc *redis.Client) {
+		_ = rc.Close()
+	}(rc)
 
 	if err := rc.Ping(ctx).Err(); err != nil {
 		t.Fatal(err)

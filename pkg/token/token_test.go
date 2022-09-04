@@ -45,6 +45,6 @@ func BenchmarkJwtSignAndParse(b *testing.B) {
 	token := New(secret)
 	for i := 0; i < b.N; i++ {
 		tokenString, _ := token.JwtSign(123456789, "xinliangnote", 24*time.Hour)
-		token.JwtParse(tokenString)
+		_, _ = token.JwtParse(tokenString)
 	}
 }
