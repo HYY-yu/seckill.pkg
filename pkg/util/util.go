@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // IsNotZero just IsZero invert
@@ -23,6 +24,15 @@ func IsZero(data interface{}) bool {
 		return val.IsZero()
 	}
 	return reflect.ValueOf(data).IsZero()
+}
+
+// WrapSqlLike wrap v to '%v%' for sql like.
+func WrapSqlLike(v string) string {
+	sb := strings.Builder{}
+	sb.WriteByte('%')
+	sb.WriteString(strings.TrimSpace(v))
+	sb.WriteByte('%')
+	return sb.String()
 }
 
 func StrArr2IntArr(s []string, ignoreZero bool) ([]int, error) {

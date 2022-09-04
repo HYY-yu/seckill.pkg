@@ -127,3 +127,34 @@ func TestStrArr2IntArr(t *testing.T) {
 		})
 	}
 }
+
+func TestWrapSqlLike(t *testing.T) {
+	type args struct {
+		v string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "test1",
+			args: args{
+				v: "HAHA",
+			},
+			want: "%HAHA%",
+		},
+		{
+			name: "test2",
+			args: args{
+				v: "  HAHA",
+			},
+			want: "%HAHA%",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, WrapSqlLike(tt.args.v), "WrapSqlLike(%v)", tt.args.v)
+		})
+	}
+}
