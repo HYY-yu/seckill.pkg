@@ -49,7 +49,7 @@ func New(cfg *DBConfig) (Repo, error) {
 func (d *dbRepo) i() {}
 
 func (d *dbRepo) GetDb(ctx context.Context) *gorm.DB {
-	return d.Db.WithContext(ctx)
+	return d.Db
 }
 
 func (d *dbRepo) DbClose() error {
