@@ -16,9 +16,9 @@ func (t testNode) ID() string {
 
 func Test_rootDecisionNode_AddChildren(t *testing.T) {
 	tests := []struct {
-		name     string
-		args     []Node
-		wantsIds []string
+		name    string
+		args    []Node
+		wantIds []string
 	}{
 		{
 			name: "TEST1",
@@ -28,12 +28,12 @@ func Test_rootDecisionNode_AddChildren(t *testing.T) {
 				testNode{Id: 3},
 				testNode{Id: 4},
 			},
-			wantsIds: []string{"1", "2", "3", "4"},
+			wantIds: []string{"1", "2", "3", "4"},
 		},
 		{
-			name:     "TEST2",
-			args:     []Node{},
-			wantsIds: []string{},
+			name:    "TEST2",
+			args:    []Node{},
+			wantIds: []string{},
 		},
 	}
 	for _, tt := range tests {
@@ -45,9 +45,9 @@ func Test_rootDecisionNode_AddChildren(t *testing.T) {
 			}
 			ids := r.ChildrenList()
 
-			assert.Equal(t, tt.wantsIds, ids)
-			assert.Equal(t, len(tt.wantsIds), len(r.childList))
-			assert.Equal(t, len(tt.wantsIds), len(r.childMap))
+			assert.Equal(t, tt.wantIds, ids)
+			assert.Equal(t, len(tt.wantIds), len(r.childList))
+			assert.Equal(t, len(tt.wantIds), len(r.childMap))
 		})
 	}
 }
@@ -57,7 +57,7 @@ func Test_rootDecisionNode_DeleteChildren(t *testing.T) {
 		name     string
 		args     []Node
 		deleteId string
-		wantsIds []string
+		wantIds  []string
 	}{
 		{
 			name: "TEST1",
@@ -68,7 +68,7 @@ func Test_rootDecisionNode_DeleteChildren(t *testing.T) {
 				testNode{Id: 4},
 			},
 			deleteId: "1",
-			wantsIds: []string{"2", "3", "4"},
+			wantIds:  []string{"2", "3", "4"},
 		},
 		{
 			name: "TEST2",
@@ -79,7 +79,7 @@ func Test_rootDecisionNode_DeleteChildren(t *testing.T) {
 				testNode{Id: 4},
 			},
 			deleteId: "2",
-			wantsIds: []string{"1", "3", "4"},
+			wantIds:  []string{"1", "3", "4"},
 		}, {
 			name: "TEST3",
 			args: []Node{
@@ -89,7 +89,7 @@ func Test_rootDecisionNode_DeleteChildren(t *testing.T) {
 				testNode{Id: 4},
 			},
 			deleteId: "4",
-			wantsIds: []string{"1", "2", "3"},
+			wantIds:  []string{"1", "2", "3"},
 		}, {
 			name: "TEST4",
 			args: []Node{
@@ -99,7 +99,7 @@ func Test_rootDecisionNode_DeleteChildren(t *testing.T) {
 				testNode{Id: 4},
 			},
 			deleteId: "0",
-			wantsIds: []string{"1", "2", "3", "4"},
+			wantIds:  []string{"1", "2", "3", "4"},
 		},
 	}
 	for _, tt := range tests {
@@ -112,7 +112,7 @@ func Test_rootDecisionNode_DeleteChildren(t *testing.T) {
 
 			r.DeleteChildren(tt.deleteId)
 			ids := r.ChildrenList()
-			assert.Equal(t, tt.wantsIds, ids)
+			assert.Equal(t, tt.wantIds, ids)
 		})
 	}
 }

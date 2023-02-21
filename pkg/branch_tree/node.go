@@ -8,19 +8,22 @@ type Node interface {
 type DecisionNode interface {
 	Node
 	// DecisionRule 决策规则
-	// return true 代表进入下一层
-	// return false 代表跳过此节点
+	// return true 代表进入本节点的子节点，不再遍历本节点的兄弟节点。
+	// return false 代表跳过此节点，继续遍历本节点的兄弟节点。
 	DecisionRule(param interface{}) bool
+	// ChildrenList 子节点 ID 列表
 	ChildrenList() []string
 }
 
 // ExecNode 叶子节点
 type ExecNode interface {
 	Node
+	// Do 当决策走到最深一层的叶子节点，调用 Do ，并结束这次决策。
 	Do(param interface{}) error
 }
 
 // 根节点
+// 内部虚拟根节点，为整颗决策树配置默认根。
 type rootDecisionNode struct {
 	childList []Node
 	childMap  map[string]int
