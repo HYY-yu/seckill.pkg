@@ -13,7 +13,6 @@ import (
 )
 
 type Repo interface {
-	i()
 	Set(ctx context.Context, key, value string, ttl time.Duration) error
 	Get(ctx context.Context, key string) (string, error)
 	TTL(ctx context.Context, key string) (time.Duration, error)
@@ -51,8 +50,6 @@ func New(serverName string, cfg *RedisConf) (Repo, error) {
 		client:     client,
 	}, nil
 }
-
-func (c *cacheRepo) i() {}
 
 func redisConnect(serverName string, cfg *RedisConf) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{

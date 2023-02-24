@@ -13,7 +13,6 @@ import (
 var _ Repo = (*dbRepo)(nil)
 
 type Repo interface {
-	i()
 	GetDb() *gorm.DB
 	DbClose() error
 }
@@ -44,8 +43,6 @@ func New(cfg *DBConfig) (Repo, error) {
 		Db: db,
 	}, nil
 }
-
-func (d *dbRepo) i() {}
 
 func (d *dbRepo) GetDb() *gorm.DB {
 	return d.Db
