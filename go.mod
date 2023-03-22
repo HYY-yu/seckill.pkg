@@ -13,6 +13,7 @@ require (
 	github.com/gogf/gf/v2 v2.1.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
+	github.com/juju/ratelimit v1.0.2 // indirect
 	github.com/prometheus/client_golang v1.12.2
 	github.com/rs/cors/wrapper/gin v0.0.0-20220223021805-a4a5ce87d5a2
 	github.com/spf13/cast v1.4.1
